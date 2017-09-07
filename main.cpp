@@ -26,7 +26,10 @@ int main(){
 	sf::CircleShape player(radius);
 	Vec2 vecSpeed{0.f,0.f};
 	Vec2 velocity{0.f,0.f};
-	float speed = 10.f;
+	float32 speed = 15.f;
+	float32 buoyancy = 0.f;
+	float32 friction = 1.f;
+	Vec2 gravity{0.f,5.f};
 	bool up,down,left,right;
 	Vec2 windowSize{static_cast<Vec2>(window.getSize())};
 	//~members
@@ -102,7 +105,7 @@ int main(){
 			vecSpeed.x = right - left;
 			vecSpeed = vec::normalized(vecSpeed);
 			velocity += vecSpeed * (speed * secsPerFrame);
-			velocity.y += 2.5f * secsPerFrame;
+			velocity += gravity * secsPerFrame;
 			Vec2 topLeft{player.getPosition()-Vec2{radius,radius}};
 			Vec2 botRight{player.getPosition()+Vec2{radius,radius}};
 
@@ -123,7 +126,10 @@ int main(){
 				//player.setPosition(player.getPosition().x, windowSize.y - radius);
 			}
 			player.move(velocity);
-
+			auto norm = vec::normalized(velocity);
+			velocity.x = approach(velocity.x, 0.f, copysign(norm.x,1.f)*friction*secsPerFrame);
+			velocity.y = approach(velocity.y, 0.f, copysign(norm.y,1.f)*friction*secsPerFrame);
+			velocity *= (1.f-buoyancy*secsPerFrame);
 			//~update
 
 		}while(deltaTime > timePerFrame);
