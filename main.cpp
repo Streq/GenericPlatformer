@@ -14,27 +14,58 @@
 #include <SFML/Window.hpp>
 #include <SFML/System.hpp>
 
+#include <lua.hpp>
+#include <iostream>
+
 using namespace mch;
 constexpr int64 microsPerFrame = 16666;
 constexpr float32 secsPerFrame = microsPerFrame / 1.e6f;
-constexpr float32 radius = 10.f;
+
+const std::string luaVars = "vars.lua";
 const Time timePerFrame(sf::microseconds(microsPerFrame));
 int main(){
 
 	//members
 	RenderWindow window(sf::VideoMode(800,600), "Pantiforma", sf::Style::Default);
-	sf::CircleShape player(radius);
+	sf::CircleShape player;
 	Vec2 vecSpeed{0.f,0.f};
 	Vec2 velocity{0.f,0.f};
+
+	float32 radius = 10.f;
 	float32 speed = 15.f;
-	float32 buoyancy = 0.f;
-	float32 friction = 1.f;
+	float32 buoyancy = 0.05f;
+	float32 friction = 0.5f;
 	Vec2 gravity{0.f,5.f};
 	bool up,down,left,right;
 	Vec2 windowSize{static_cast<Vec2>(window.getSize())};
 	//~members
 
+	//lua
+	auto state = luaL_newstate();
+	if (luaL_loadfile(state, luaVars.c_str()) || lua_pcall(state, 0, 0, 0)) {
+		std::cout<<"Error: script not loaded ("<<luaVars<<")"<<std::endl;
+		state = 0;
+	}
+	lua_getglobal(state,"player");
+	lua_getfield(state,-1,"speed");
+	speed = lua_tonumber(state,-1);
+	lua_pop(state,1);
+	lua_getfield(state,-1,"buoyancy");
+	buoyancy = lua_tonumber(state,-1);
+	lua_pop(state,1);
+	lua_getfield(state,-1,"friction");
+	friction = lua_tonumber(state,-1);
+	lua_pop(state,1);
+	lua_getfield(state,-1,"radius");
+	radius = lua_tonumber(state,-1);
+	lua_pop(state,1);
+
+	//~lua
+
+
+
 	//init
+	player.setRadius(radius);
 	player.setFillColor(sf::Color::Green);
 	player.setOutlineThickness(2.f);
 	player.setOutlineColor(sf::Color::Blue);
