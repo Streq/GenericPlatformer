@@ -1,7 +1,13 @@
 player = {
-	speed = 30,
-	buoyancy = 0.5,
-	friction = 0.5,
-	radius = 20,
--- you can also have comments
+	speed = 40,
+	buoyancy = 0.1,
+	friction = 0.05,
+	radius = 10,
+-- el rebote
+	rebound = 0.9,
+}
+
+gravity = {
+	X = 0.0,
+	Y = 5.0,
 }

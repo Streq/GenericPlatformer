@@ -35,47 +35,69 @@ int main(){
 	float32 speed = 15.f;
 	float32 buoyancy = 0.05f;
 	float32 friction = 0.5f;
+	float32 rebound = 1.f;
 	Vec2 gravity{0.f,5.f};
 	bool up,down,left,right;
 	Vec2 windowSize{static_cast<Vec2>(window.getSize())};
 	//~members
 
-	//lua
-	auto state = luaL_newstate();
-	if (luaL_loadfile(state, luaVars.c_str()) || lua_pcall(state, 0, 0, 0)) {
-		std::cout<<"Error: script not loaded ("<<luaVars<<")"<<std::endl;
-		state = 0;
-	}
-	lua_getglobal(state,"player");
-	lua_getfield(state,-1,"speed");
-	speed = lua_tonumber(state,-1);
-	lua_pop(state,1);
-	lua_getfield(state,-1,"buoyancy");
-	buoyancy = lua_tonumber(state,-1);
-	lua_pop(state,1);
-	lua_getfield(state,-1,"friction");
-	friction = lua_tonumber(state,-1);
-	lua_pop(state,1);
-	lua_getfield(state,-1,"radius");
-	radius = lua_tonumber(state,-1);
-	lua_pop(state,1);
+	auto init = [&](){
+		//lua
+		auto state = luaL_newstate();
+		if (luaL_loadfile(state, luaVars.c_str()) || lua_pcall(state, 0, 0, 0)) {
+			std::cout<<"Error: script not loaded ("<<luaVars<<")"<<std::endl;
+			state = 0;
+		}
+		lua_getglobal(state,"player");
 
-	//~lua
+		lua_getfield(state,-1,"speed");
+		speed = lua_tonumber(state,-1);
+		lua_pop(state,1);
+
+		lua_getfield(state,-1,"buoyancy");
+		buoyancy = lua_tonumber(state,-1);
+		lua_pop(state,1);
+
+		lua_getfield(state,-1,"friction");
+		friction = lua_tonumber(state,-1);
+		lua_pop(state,1);
+
+		lua_getfield(state,-1,"radius");
+		radius = lua_tonumber(state,-1);
+		lua_pop(state,1);
+
+		lua_getfield(state,-1,"rebound");
+		rebound = lua_tonumber(state,-1);
+		lua_pop(state,2);
+
+		lua_getglobal(state,"gravity");
+
+		lua_getfield(state,-1,"X");
+		gravity.x = lua_tonumber(state,-1);
+		lua_pop(state,1);
+
+		lua_getfield(state,-1,"Y");
+		gravity.y = lua_tonumber(state,-1);
+		lua_pop(state,1);
+		lua_close(state);
 
 
+		//~lua
 
-	//init
-	player.setRadius(radius);
-	player.setFillColor(sf::Color::Green);
-	player.setOutlineThickness(2.f);
-	player.setOutlineColor(sf::Color::Blue);
-	player.setOrigin(radius,radius);
-	player.setPosition(
-		windowSize * 0.5f
-	);
-	up=down=left=right=false;
-	//~init
-
+		//init
+		player.setRadius(radius);
+		player.setFillColor(sf::Color::Green);
+		player.setOutlineThickness(2.f);
+		player.setOutlineColor(sf::Color::Blue);
+		player.setOrigin(radius,radius);
+		player.setPosition(
+			windowSize * 0.5f
+		);
+		velocity=Vec2{0.f,0.f};
+		up=down=left=right=false;
+		//~init
+	};
+	init();
 	Clock clock;
 	Time deltaTime{ Time::Zero };
 	while(window.isOpen()){
@@ -119,6 +141,9 @@ int main(){
 						case decltype(key)::S:{
 							down=false;
 						}break;
+						case decltype(key)::R:{
+							init();
+						}break;
 					}
 				}break;
 				case sf::Event::Closed:{
@@ -141,20 +166,33 @@ int main(){
 			Vec2 botRight{player.getPosition()+Vec2{radius,radius}};
 
 			if(topLeft.x <= 0.f){
-				velocity.x = copysign(velocity.x, 1.f);
-				//player.setPosition(0.f+radius, player.getPosition().y);
+				if(velocity.x<0.f){
+					velocity.x *= rebound;
+					velocity.x = copysign(velocity.x, 1.f);
+				}
+				player.setPosition(0.f+radius, player.getPosition().y);
 			}
 			if(topLeft.y <= 0.f){
-				velocity.y = copysign(velocity.y, 1.f);
-				//player.setPosition(player.getPosition().x, 0.f + radius);
+				if(velocity.y < 0.f){
+					velocity.y *= rebound;
+					velocity.y = copysign(velocity.y, 1.f);
+				}
+				player.setPosition(player.getPosition().x, 0.f + radius);
 			}
 			if(botRight.x >= windowSize.x){
-				velocity.x = copysign(velocity.x, -1.f);
-				//player.setPosition(windowSize.x - radius, player.getPosition().y);
+				if(velocity.x > 0.f){
+					velocity.x *= rebound;
+					velocity.x = copysign(velocity.x, -1.f);
+				}
+				player.setPosition(windowSize.x - radius, player.getPosition().y);
 			}
 			if(botRight.y >= windowSize.y){
-				velocity.y = copysign(velocity.y, -1.f);
-				//player.setPosition(player.getPosition().x, windowSize.y - radius);
+				if(velocity.y > 0.f){
+					velocity.y *= rebound;
+					velocity.y = copysign(velocity.y, -1.f);
+				}
+				player.setPosition(player.getPosition().x, windowSize.y - radius);
+
 			}
 			player.move(velocity);
 			auto norm = vec::normalized(velocity);
