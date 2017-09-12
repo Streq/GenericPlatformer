@@ -18,14 +18,16 @@
 #include <iostream>
 
 using namespace mch;
-constexpr int64 microsPerFrame = 16666;
-constexpr float32 secsPerFrame = microsPerFrame / 1.e6f;
 
 const std::string luaVars = "vars.lua";
-const Time timePerFrame(sf::microseconds(microsPerFrame));
 int main(){
 
 	//members
+	float secsPerFrame = 1.f/60.f;
+	Time timePerFrame(sf::seconds(secsPerFrame));
+	bool frameskip = false;
+	bool limitFPS = true;
+
 	RenderWindow window(sf::VideoMode(800,600), "Pantiforma", sf::Style::Default);
 	sf::CircleShape player;
 	Vec2 vecSpeed{0.f,0.f};
@@ -48,6 +50,21 @@ int main(){
 			std::cout<<"Error: script not loaded ("<<luaVars<<")"<<std::endl;
 			state = 0;
 		}
+		lua_getglobal(state,"frameskip");
+		speed = lua_toboolean(state,-1);
+		lua_pop(state,1);
+
+		lua_getglobal(state,"limitFPS");
+		limitFPS = lua_toboolean(state,-1);
+		lua_pop(state,1);
+
+		lua_getglobal(state,"FPS");
+		int fps = lua_tointeger(state,-1);
+		if(fps>0)
+			secsPerFrame = 1.f/fps;
+		timePerFrame = sf::seconds(secsPerFrame);
+		lua_pop(state,1);
+
 		lua_getglobal(state,"player");
 
 		lua_getfield(state,-1,"speed");
@@ -80,8 +97,6 @@ int main(){
 		gravity.y = lua_tonumber(state,-1);
 		lua_pop(state,1);
 		lua_close(state);
-
-
 		//~lua
 
 		//init
@@ -103,7 +118,7 @@ int main(){
 	while(window.isOpen()){
 		do{
 			deltaTime += clock.restart();
-		}while(deltaTime < timePerFrame);
+		}while(limitFPS && deltaTime < timePerFrame);
 
 		//handle_events();
 		sf::Event e;
@@ -155,6 +170,7 @@ int main(){
 
 		do{
 			deltaTime -= timePerFrame;
+			deltaTime = std::max(deltaTime,sf::Time::Zero);
 
 			//update();
 			vecSpeed.y = down - up;
@@ -201,7 +217,7 @@ int main(){
 			velocity *= (1.f-buoyancy*secsPerFrame);
 			//~update
 
-		}while(deltaTime > timePerFrame);
+		}while(frameskip && deltaTime > timePerFrame);
 
 		//render();
 		window.clear();
