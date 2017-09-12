@@ -27,19 +27,25 @@ void Game::run() {
 	init();
 	Time deltaTime=Time::Zero;
 	Clock clock;
+	Clock renderClock;
 	while(window.isOpen()){
 		do{
 			deltaTime += clock.restart();
 		}while(limitFPS && deltaTime < timePerFrame);
 
 		handle_events();
-
+		
 		do{
-			deltaTime -= timePerFrame;
-			deltaTime = std::max(deltaTime,sf::Time::Zero);
-
+			//decrement deltaTime or set it to 0 depending on frameskip
+			deltaTime = std::max
+				( (deltaTime-timePerFrame)*static_cast<float>(frameskip)
+				, sf::Time::Zero
+				)
+			;
 			update();
-		}while(frameskip && deltaTime > timePerFrame);
+		}while(deltaTime > timePerFrame);
+		
+		msSinceLastRender = renderClock.restart().asMicroseconds();	
 		render();
 	}
 }
@@ -227,6 +233,9 @@ void Game::handle_events() {
 			case sf::Event::Closed:{
 				window.close();
 			}break;
+			case sf::Event::LostFocus:{
+				up=down=left=right=false;
+			};
 		}
 	};
 }

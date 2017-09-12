@@ -28,7 +28,7 @@ class Game {
 		void setFPS(int fps);
 
 	private:
-		RenderWindow 				window;
+		RenderWindow 					window;
 		Vec2u 						windowSize;
 
 
@@ -38,8 +38,9 @@ class Game {
 		Time 						timePerFrame;
 		bool 						frameskip;
 		bool 						limitFPS;
-
-		sf::CircleShape 			player;
+		uint64						msSinceLastRender;
+	
+		sf::CircleShape 				player;
 
 		Vec2 						vecSpeed{0.f,0.f};
 		Vec2 						velocity{0.f,0.f};
