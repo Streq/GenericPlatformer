@@ -28,25 +28,30 @@ void Game::run() {
 	Time deltaTime=Time::Zero;
 	Clock clock;
 	Clock renderClock;
+	int32 stepsUntilRender = stepsPerRender;
 	while(window.isOpen()){
 		do{
 			deltaTime += clock.restart();
-		}while(limitFPS && deltaTime < timePerFrame);
+		}while(limitFPS && deltaTime < physicsDeltaTime);
 
 		handle_events();
 		
 		do{
 			//decrement deltaTime or set it to 0 depending on frameskip
 			deltaTime = std::max
-				( (deltaTime-timePerFrame)*static_cast<float>(frameskip)
+				( (deltaTime-physicsDeltaTime)*static_cast<float>(frameskip)
 				, sf::Time::Zero
 				)
 			;
 			update();
-		}while(deltaTime > timePerFrame);
+			--stepsUntilRender;
+		}while(deltaTime > physicsDeltaTime);
 		
-		msSinceLastRender = renderClock.restart().asMicroseconds();	
-		render();
+		if(stepsUntilRender<=0){
+			msSinceLastRender = renderClock.restart().asMicroseconds();
+			render();
+			stepsUntilRender=stepsPerRender;
+		}
 	}
 }
 
@@ -72,18 +77,21 @@ void Game::init() {
 	window.create(sf::VideoMode(windowSize.x,windowSize.y), "Pantiforma", sf::Style::Default);
 	window.setPosition(centerPos);
 	lua_getglobal(state,"frameskip");
-	speed = lua_toboolean(state,-1);
+	frameskip = lua_toboolean(state,-1);
 	lua_pop(state,1);
 
 	lua_getglobal(state,"limitFPS");
 	limitFPS = lua_toboolean(state,-1);
 	lua_pop(state,1);
 
-	lua_getglobal(state,"FPS");
+	lua_getglobal(state,"PhysicsFPS");
 	int fps = lua_tointeger(state,-1);
 	if(fps>0)
-		secondsPerFrame = 1.f/fps;
-	timePerFrame = sf::seconds(secondsPerFrame);
+		physicsDeltaSecs = 1.f/fps;
+	physicsDeltaTime = sf::seconds(physicsDeltaSecs);
+	lua_pop(state,1);
+	lua_getglobal(state,"StepsPerRender");
+	stepsPerRender = lua_tointeger(state,-1);
 	lua_pop(state,1);
 
 	lua_getglobal(state,"player");
@@ -117,6 +125,19 @@ void Game::init() {
 	lua_getfield(state,-1,"Y");
 	gravity.y = lua_tonumber(state,-1);
 	lua_pop(state,1);
+	lua_pop(state,1);
+
+	lua_getglobal(state,"fpsText");
+	lua_getfield(state,-1,"font");
+	fpsFont.loadFromFile(lua_tostring(state,-1));
+	fpsText.setFont(fpsFont);
+	lua_pop(state,1);
+	lua_getfield(state,-1,"size");
+	fpsText.setCharacterSize(lua_tointeger(state,-1));
+	fpsText.setColor(sf::Color::White);
+	lua_pop(state,1);
+	lua_pop(state,1);
+
 	lua_close(state);
 	//~lua
 
@@ -141,8 +162,8 @@ void Game::update() {
 	vecSpeed.y = down - up;
 	vecSpeed.x = right - left;
 	vecSpeed = vec::normalized(vecSpeed);
-	velocity += vecSpeed * (speed * secondsPerFrame);
-	velocity += gravity * secondsPerFrame;
+	velocity += vecSpeed * (speed * physicsDeltaSecs);
+	velocity += gravity * physicsDeltaSecs;
 	Vec2 topLeft{player.getPosition()-Vec2{radius,radius}};
 	Vec2 botRight{player.getPosition()+Vec2{radius,radius}};
 
@@ -177,15 +198,18 @@ void Game::update() {
 	}
 	player.move(velocity);
 	auto norm = vec::normalized(velocity);
-	velocity.x = approach(velocity.x, 0.f, copysign(norm.x,1.f)*friction*secondsPerFrame);
-	velocity.y = approach(velocity.y, 0.f, copysign(norm.y,1.f)*friction*secondsPerFrame);
-	velocity *= (1.f-buoyancy*secondsPerFrame);
+	velocity.x = approach(velocity.x, 0.f, copysign(norm.x,1.f)*friction*physicsDeltaSecs);
+	velocity.y = approach(velocity.y, 0.f, copysign(norm.y,1.f)*friction*physicsDeltaSecs);
+	velocity *= (1.f-buoyancy*physicsDeltaSecs);
 
 }
 
 void Game::render() {
+	fpsText.setString(std::to_string(msSinceLastRender));
+
 	window.clear();
 	window.draw(player);
+	window.draw(fpsText);
 	window.display();
 }
 

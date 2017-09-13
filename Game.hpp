@@ -12,6 +12,8 @@
 #include "window.hpp"
 #include "time.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics/Text.hpp>
 
 namespace mch{
 
@@ -33,13 +35,17 @@ class Game {
 
 
 
-		uint32						fps;
-		float32 					secondsPerFrame;
-		Time 						timePerFrame;
+		float32 					physicsDeltaSecs;
+		Time 						physicsDeltaTime;;
+
+
+
 		bool 						frameskip;
 		bool 						limitFPS;
 		uint64						msSinceLastRender;
-	
+		int32						stepsPerRender;
+
+
 		sf::CircleShape 				player;
 
 		Vec2 						vecSpeed{0.f,0.f};
@@ -51,6 +57,9 @@ class Game {
 		float32 					rebound = 1.f;
 		Vec2 						gravity{0.f,5.f};
 		bool 						up,down,left,right;
+
+		sf::Font					fpsFont;
+		sf::Text					fpsText;
 
 
 
