@@ -1,5 +1,5 @@
-PhysicsFPS = 960
-StepsPerRender = 16
+PhysicsFPS = 60
+StepsPerRender = 1
 frameskip = false
 limitFPS = true
 
@@ -29,14 +29,15 @@ winSize = {
 }
 
 player = {
-	speed = 5,
-	buoyancy = 0.1,
-	friction = 0.01,
-	radius = 10,
-	rebound = 0.8,
+	acceleration = 200,
+	buoyancy = 0.5,
+	friction = 0.1,
+	radius = 7.5,
+	rebound = 0.0,
+	jumpSpeed = -20,
 }
 
 gravity = {
 	X = 0.0,
-	Y = 1.0,
+	Y = 100.0,
 }

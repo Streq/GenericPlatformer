@@ -96,8 +96,8 @@ void Game::init() {
 
 	lua_getglobal(state,"player");
 
-	lua_getfield(state,-1,"speed");
-	speed = lua_tonumber(state,-1);
+	lua_getfield(state,-1,"acceleration");
+	acceleration = lua_tonumber(state,-1);
 	lua_pop(state,1);
 
 	lua_getfield(state,-1,"buoyancy");
@@ -111,6 +111,11 @@ void Game::init() {
 	lua_getfield(state,-1,"radius");
 	radius = lua_tonumber(state,-1);
 	lua_pop(state,1);
+
+	lua_getfield(state,-1,"jumpSpeed");
+	jumpSpeed = lua_tonumber(state,-1);
+	lua_pop(state,1);
+
 
 	lua_getfield(state,-1,"rebound");
 	rebound = lua_tonumber(state,-1);
@@ -151,7 +156,7 @@ void Game::init() {
 		Vec2(windowSize) * 0.5f
 	);
 	velocity=Vec2{0.f,0.f};
-	up=down=left=right=false;
+	up=down=left=right=jump=false;
 }
 
 void Game::setFPS(int fps) {
@@ -159,11 +164,13 @@ void Game::setFPS(int fps) {
 
 
 void Game::update() {
-	vecSpeed.y = down - up;
-	vecSpeed.x = right - left;
-	vecSpeed = vec::normalized(vecSpeed);
-	velocity += vecSpeed * (speed * physicsDeltaSecs);
-	velocity += gravity * physicsDeltaSecs;
+	vecAcceleration.y = down - up;
+	vecAcceleration.x = right - left;
+	vecAcceleration = vec::normalized(vecAcceleration);
+	auto delta_velocity = (vecAcceleration*acceleration + gravity) * physicsDeltaSecs;
+	velocity += delta_velocity;
+	velocity.y += jumpSpeed*static_cast<float>(jump);
+	jump=false;
 	Vec2 topLeft{player.getPosition()-Vec2{radius,radius}};
 	Vec2 botRight{player.getPosition()+Vec2{radius,radius}};
 
@@ -248,6 +255,9 @@ void Game::handle_events() {
 					}break;
 					case decltype(key)::S:{
 						down=false;
+					}break;
+					case decltype(key)::Space:{
+						jump=true;
 					}break;
 					case decltype(key)::R:{
 						init();
