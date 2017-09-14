@@ -23,21 +23,22 @@ winSize = {
 	--X = 256,
 	--Y = 240,
 --Usado
-	X = 480,
-	Y = 320,
-
+--	X = 480,
+	X = 1000,
+	--Y = 320,
+	Y = 700
 }
 
 player = {
-	acceleration = 200,
-	buoyancy = 0.5,
+	acceleration = 20,
+	buoyancy = 3.0,
 	friction = 0.1,
 	radius = 7.5,
 	rebound = 0.0,
-	jumpSpeed = -20,
+	jumpSpeed = -10,
 }
 
 gravity = {
 	X = 0.0,
-	Y = 100.0,
+	Y = 20.0,
 }

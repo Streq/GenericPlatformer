@@ -239,6 +239,9 @@ void Game::handle_events() {
 					case decltype(key)::S:{
 						down=true;
 					}break;
+					case decltype(key)::Space:{
+						jump=true;
+					}break;
 				}
 			}break;
 			case sf::Event::KeyReleased:{
@@ -255,9 +258,6 @@ void Game::handle_events() {
 					}break;
 					case decltype(key)::S:{
 						down=false;
-					}break;
-					case decltype(key)::Space:{
-						jump=true;
 					}break;
 					case decltype(key)::R:{
 						init();
