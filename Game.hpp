@@ -15,6 +15,7 @@
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>
 
+#include "Character.hpp"
 namespace mch{
 
 class Game {
@@ -33,39 +34,25 @@ class Game {
 		RenderWindow 					window;
 		Vec2u 						windowSize;
 
-
-
 		float32 					physicsDeltaSecs;
 		Time 						physicsDeltaTime;;
-
-
 
 		bool 						frameskip;
 		bool 						limitFPS;
 		uint64						msSinceLastRender;
 		int32						stepsPerRender;
 
-
-		sf::CircleShape 				player;
-
-		Vec2 						vecAcceleration{0.f,0.f};
-		Vec2 						velocity{0.f,0.f};
-		float32 					radius = 10.f;
-		float32 					acceleration = 15.f;
-		float32 					buoyancy = 0.05f;
-		float32 					friction = 0.5f;
-		float32 					rebound = 1.f;
-		float32						jumpSpeed = 10.f;
-		Vec2 						gravity{0.f,5.f};
-		bool 						up,down,left,right,jump;
-
-
-
 		sf::Font					fpsFont;
 		sf::Text					fpsText;
 
+		sf::CircleShape 			player;
 
+		Character::Properties 		charProperties;
+		Character::State			charInitState;
 
+		Character 					character;
+
+		bool 						up,down,left,right,jump;
 };
 
 }

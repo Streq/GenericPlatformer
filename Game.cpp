@@ -16,7 +16,7 @@
 #include "text.hpp"
 #include "vec2.hpp"
 #include "time.hpp"
-
+#include "collision.hpp"
 
 #include <lua.hpp>
 #include <iostream>
@@ -97,38 +97,38 @@ void Game::init() {
 	lua_getglobal(state,"player");
 
 	lua_getfield(state,-1,"acceleration");
-	acceleration = lua_tonumber(state,-1);
+	charProperties.acceleration = lua_tonumber(state,-1);
 	lua_pop(state,1);
 
 	lua_getfield(state,-1,"buoyancy");
-	buoyancy = lua_tonumber(state,-1);
+	charProperties.buoyancy = lua_tonumber(state,-1);
 	lua_pop(state,1);
 
 	lua_getfield(state,-1,"friction");
-	friction = lua_tonumber(state,-1);
+	charProperties.friction = lua_tonumber(state,-1);
 	lua_pop(state,1);
 
 	lua_getfield(state,-1,"radius");
-	radius = lua_tonumber(state,-1);
+	charProperties.radius = lua_tonumber(state,-1);
 	lua_pop(state,1);
 
 	lua_getfield(state,-1,"jumpSpeed");
-	jumpSpeed = lua_tonumber(state,-1);
+	charProperties.jumpSpeed = lua_tonumber(state,-1);
 	lua_pop(state,1);
 
 
 	lua_getfield(state,-1,"rebound");
-	rebound = lua_tonumber(state,-1);
+	charProperties.rebound = lua_tonumber(state,-1);
 	lua_pop(state,2);
 
 	lua_getglobal(state,"gravity");
 
 	lua_getfield(state,-1,"X");
-	gravity.x = lua_tonumber(state,-1);
+	charProperties.gravity.x = lua_tonumber(state,-1);
 	lua_pop(state,1);
 
 	lua_getfield(state,-1,"Y");
-	gravity.y = lua_tonumber(state,-1);
+	charProperties.gravity.y = lua_tonumber(state,-1);
 	lua_pop(state,1);
 	lua_pop(state,1);
 
@@ -147,16 +147,19 @@ void Game::init() {
 	//~lua
 
 	//init
-	player.setRadius(radius);
+	player.setRadius(charProperties.radius);
 	player.setFillColor(sf::Color::Green);
 	player.setOutlineThickness(2.f);
 	player.setOutlineColor(sf::Color::Blue);
-	player.setOrigin(radius,radius);
+	player.setOrigin(charProperties.radius,charProperties.radius);
 	player.setPosition(
 		Vec2(windowSize) * 0.5f
 	);
-	velocity=Vec2{0.f,0.f};
+	charInitState.velocity=Vec2{0.f,0.f};
 	up=down=left=right=jump=false;
+
+	character.setProperties(charProperties);
+	character.setState(charInitState);
 }
 
 void Game::setFPS(int fps) {
@@ -164,18 +167,30 @@ void Game::setFPS(int fps) {
 
 
 void Game::update() {
-	vecAcceleration.y = down - up;
-	vecAcceleration.x = right - left;
-	vecAcceleration = vec::normalized(vecAcceleration);
-	auto delta_velocity = (vecAcceleration*acceleration + gravity) * physicsDeltaSecs;
-	velocity += delta_velocity;
-	velocity.y += jumpSpeed*static_cast<float>(jump);
-	jump=false;
-	Vec2 topLeft{player.getPosition()-Vec2{radius,radius}};
-	Vec2 botRight{player.getPosition()+Vec2{radius,radius}};
 
-	if(topLeft.x <= 0.f){
-		if(velocity.x<0.f){
+	//vecAcceleration.y = down - up;
+	if(right)
+		character.moveRight();
+	if(left)
+		character.moveLeft();
+	if(up)
+		character.moveUp();
+	if(down)
+		character.moveDown();
+	if(jump)
+		character.jump();
+	//vecAcceleration = vec::normalized(vecAcceleration);
+	//auto delta_velocity = (vecAcceleration*acceleration + gravity) * physicsDeltaSecs;
+	//velocity += delta_velocity;
+	//velocity.y += jumpSpeed*static_cast<float>(jump);
+	jump=false;
+	//Vec2 topLeft{player.getPosition()-Vec2{radius,radius}};
+	//Vec2 botRight{player.getPosition()+Vec2{radius,radius}};
+	auto bounds = character.getBoundaries();
+
+	/*
+	if(bounds.topleft.x <= 0.f){
+		if(velocity.x < 0.f){
 			velocity.x *= rebound;
 			velocity.x = copysign(velocity.x, 1.f);
 		}
@@ -203,12 +218,9 @@ void Game::update() {
 		player.setPosition(player.getPosition().x, windowSize.y - radius);
 
 	}
-	player.move(velocity);
-	auto norm = vec::normalized(velocity);
-	velocity.x = approach(velocity.x, 0.f, copysign(norm.x,1.f)*friction*physicsDeltaSecs);
-	velocity.y = approach(velocity.y, 0.f, copysign(norm.y,1.f)*friction*physicsDeltaSecs);
-	velocity *= (1.f-buoyancy*physicsDeltaSecs);
-
+	*/
+	character.update(physicsDeltaSecs);
+	player.setPosition(character.getPosition());
 }
 
 void Game::render() {
