@@ -6,7 +6,10 @@
  */
 
 #include "Game.hpp"
+#include <Mocho/lua.hpp>
 using namespace mch;
+using namespace mch::lua;
+
 
 const std::string luaVars = "vars.lua";
 int main(){

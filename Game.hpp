@@ -6,11 +6,11 @@
  */
 
 #pragma once
-#include "definitions.hpp"
-#include "vec2.hpp"
+#include <Mocho/definitions.hpp>
+#include <Mocho/vec2.hpp>
+#include <Mocho/window.hpp>
+#include <Mocho/time.hpp>
 
-#include "window.hpp"
-#include "time.hpp"
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Text.hpp>

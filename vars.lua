@@ -63,3 +63,9 @@ gravity = {
 }
 --]]
 
+
+function mul (a,b)
+local i = 0
+i=2
+return a*b+i 
+end

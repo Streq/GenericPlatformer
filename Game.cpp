@@ -7,18 +7,19 @@
 
 #include "Game.hpp"
 
+#include <lua.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/System.hpp>
 
-#include "window.hpp"
-#include "math.hpp"
-#include "text.hpp"
-#include "vec2.hpp"
-#include "time.hpp"
-#include "collision.hpp"
+#include <Mocho/window.hpp>
+#include <Mocho/math.hpp>
+#include <Mocho/text.hpp>
+#include <Mocho/vec2.hpp>
+#include <Mocho/time.hpp>
+#include <Mocho/collision.hpp>
+#include <Mocho/lua.hpp>
 
-#include <lua.hpp>
 #include <iostream>
 
 constexpr auto luafile="vars.lua";
@@ -57,93 +58,52 @@ void Game::run() {
 
 void Game::init() {
 
+
 	//lua
-	auto state = luaL_newstate();
-	if (luaL_loadfile(state, luafile) || lua_pcall(state, 0, 0, 0)) {
-		std::cout<<"Error: script not loaded ("<<luafile<<")"<<std::endl;
-		state = 0;
-	}
-	lua_getglobal(state,"winSize");
-	lua_getfield(state,-1,"X");
-	windowSize.x=lua_tointeger(state,-1);
-	lua_pop(state,1);
-	lua_getfield(state,-1,"Y");
-	windowSize.y=lua_tointeger(state,-1);
-	lua_pop(state,1);
-	lua_pop(state,1);
+	lua::Script script;
+	script.doFile(luafile);
+//	auto state = luaL_newstate();
+//	if (luaL_loadfile(state, luafile) || lua_pcall(state, 0, 0, 0)) {
+//		std::cout<<"Error: script not loaded ("<<luafile<<")"<<std::endl;
+//		state = 0;
+//	}
+	script.getByFullName("winSize.X",windowSize.x);
+	script.getByFullName("winSize.Y",windowSize.y);
+
 	auto resolution = sf::VideoMode::getDesktopMode();
 	Vec2i centerPos ((Vec2u(resolution.width,resolution.height)-windowSize)/2u);
 
 	window.create(sf::VideoMode(windowSize.x,windowSize.y), "Pantiforma", sf::Style::Default);
 	window.setPosition(centerPos);
-	lua_getglobal(state,"frameskip");
-	frameskip = lua_toboolean(state,-1);
-	lua_pop(state,1);
+	script.getByFullName("frameskip",frameskip);
 
-	lua_getglobal(state,"limitFPS");
-	limitFPS = lua_toboolean(state,-1);
-	lua_pop(state,1);
-
-	lua_getglobal(state,"PhysicsFPS");
-	int fps = lua_tointeger(state,-1);
+	int fps=0;
+	script.getByFullName("PhysicsFPS",fps);
 	if(fps>0)
 		physicsDeltaSecs = 1.f/fps;
 	physicsDeltaTime = sf::seconds(physicsDeltaSecs);
-	lua_pop(state,1);
-	lua_getglobal(state,"StepsPerRender");
-	stepsPerRender = lua_tointeger(state,-1);
-	lua_pop(state,1);
 
-	lua_getglobal(state,"player");
-
-	lua_getfield(state,-1,"acceleration");
-	charProperties.acceleration = lua_tonumber(state,-1);
-	lua_pop(state,1);
-
-	lua_getfield(state,-1,"buoyancy");
-	charProperties.buoyancy = lua_tonumber(state,-1);
-	lua_pop(state,1);
-
-	lua_getfield(state,-1,"friction");
-	charProperties.friction = lua_tonumber(state,-1);
-	lua_pop(state,1);
-
-	lua_getfield(state,-1,"radius");
-	charProperties.radius = lua_tonumber(state,-1);
-	lua_pop(state,1);
-
-	lua_getfield(state,-1,"jumpSpeed");
-	charProperties.jumpSpeed = lua_tonumber(state,-1);
-	lua_pop(state,1);
+	script.getByFullName("StepsPerRender",stepsPerRender);
+	script.getByFullName("limitFPS",limitFPS);
 
 
-	lua_getfield(state,-1,"rebound");
-	charProperties.rebound = lua_tonumber(state,-1);
-	lua_pop(state,2);
+	script.getByFullName("player.acceleration",charProperties.acceleration);
+	script.getByFullName("player.buoyancy",charProperties.buoyancy);
+	script.getByFullName("player.friction",charProperties.friction);
+	script.getByFullName("player.radius",charProperties.radius);
+	script.getByFullName("player.jumpSpeed",charProperties.jumpSpeed);
+	script.getByFullName("player.rebound",charProperties.rebound);
+	script.getByFullName("gravity.X",charProperties.gravity.x);
+	script.getByFullName("gravity.Y",charProperties.gravity.y);
+	const char* fontpath;
+	script.getByFullName("fpsText.font",fontpath);
 
-	lua_getglobal(state,"gravity");
-
-	lua_getfield(state,-1,"X");
-	charProperties.gravity.x = lua_tonumber(state,-1);
-	lua_pop(state,1);
-
-	lua_getfield(state,-1,"Y");
-	charProperties.gravity.y = lua_tonumber(state,-1);
-	lua_pop(state,1);
-	lua_pop(state,1);
-
-	lua_getglobal(state,"fpsText");
-	lua_getfield(state,-1,"font");
-	fpsFont.loadFromFile(lua_tostring(state,-1));
+	fpsFont.loadFromFile(fontpath);
 	fpsText.setFont(fpsFont);
-	lua_pop(state,1);
-	lua_getfield(state,-1,"size");
-	fpsText.setCharacterSize(lua_tointeger(state,-1));
+	unsigned charSize;
+	script.getByFullName("fpsText.size",charSize);
+	fpsText.setCharacterSize(charSize);
 	fpsText.setColor(sf::Color::White);
-	lua_pop(state,1);
-	lua_pop(state,1);
-
-	lua_close(state);
 	//~lua
 
 	//init

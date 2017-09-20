@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include "definitions.hpp"
-#include "vec2.hpp"
+#include <Mocho/definitions.hpp>
+#include <Mocho/vec2.hpp>
 
-#include "collision.hpp"
+#include <Mocho/collision.hpp>
 
 class Character {
 	public:
