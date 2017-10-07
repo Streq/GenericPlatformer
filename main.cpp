@@ -5,16 +5,19 @@
  *      Author: santiago
  */
 
-#include "Game.hpp"
-#include <Mocho/lua.hpp>
+#include <Mocho/Application/Application.hpp>
+#include <Mocho/Application/AppState.hpp>
+
+#include "LoadingState.hpp"
+//#include "Tests/test.hpp"
 using namespace mch;
-using namespace mch::lua;
 
 
-const std::string luaVars = "vars.lua";
+constexpr int sizeVert = 10;
 int main(){
-	Game game;
-	game.run();
-
+	Application app;
+	std::unique_ptr<AppState> gameState(new LoadingState);
+	app.init(std::move(gameState));
+	app.run();
 	return 0;
 }

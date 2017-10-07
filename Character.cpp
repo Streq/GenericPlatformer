@@ -53,8 +53,8 @@ void Character::update(float dt) {
 	state.position += state.velocity;
 
 	auto norm = mch::vec::normalized(state.velocity);
-	state.velocity.x = mch::approach(state.velocity.x, 0.f, copysign(norm.x,1.f)*properties.friction*dt);
-	state.velocity.y = mch::approach(state.velocity.y, 0.f, copysign(norm.y,1.f)*properties.friction*dt);
+	state.velocity.x = mch::approach<float>(state.velocity.x, 0.f, copysign(norm.x,1.f)*properties.friction*dt);
+	state.velocity.y = mch::approach<float>(state.velocity.y, 0.f, copysign(norm.y,1.f)*properties.friction*dt);
 	state.velocity *= (1.f-properties.buoyancy*dt);
 	state.vecAcceleration.x=0.f;
 	state.vecAcceleration.y=0.f;
@@ -74,15 +74,15 @@ void Character::setState(const State& state) {
 	this->state = state;
 }
 
-mch::Vec2 Character::getPosition() {
+mch::Vec2f Character::getPosition() {
 	return state.position;
 }
 
 mch::AABB Character::getBoundaries() {
 	mch::AABB ret;
 
-	mch::Vec2 center {properties.radius, properties.radius};
-	mch::Vec2 position = state.position - center;
+	mch::Vec2f center {properties.radius, properties.radius};
+	mch::Vec2f position = state.position - center;
 
 	ret.size = center*2.f;
 	ret.topleft = position-center;

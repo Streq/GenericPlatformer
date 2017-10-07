@@ -15,7 +15,7 @@
 class Character {
 	public:
 		struct Properties{
-			mch::Vec2					gravity;
+			mch::Vec2f					gravity;
 			mch::float32				radius ;
 			mch::float32				acceleration;
 			mch::float32				buoyancy;
@@ -25,9 +25,9 @@ class Character {
 		};
 
 		struct State{
-			mch::Vec2					position;
-			mch::Vec2					vecAcceleration;
-			mch::Vec2					velocity;
+			mch::Vec2f					position;
+			mch::Vec2f					vecAcceleration;
+			mch::Vec2f					velocity;
 		};
 
 	public:
@@ -48,7 +48,7 @@ class Character {
 		void setGrounded(bool);
 		void update(float dt);
 
-		mch::Vec2 getPosition();
+		mch::Vec2f getPosition();
 		mch::AABB getBoundaries();
 
 	private:
