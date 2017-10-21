@@ -9,7 +9,7 @@
 #include <Mocho/Application/AppState.hpp>
 
 #include "LoadingState.hpp"
-//#include "Tests/test.hpp"
+#include "Tests/test.hpp"
 using namespace mch;
 
 
@@ -19,5 +19,6 @@ int main(){
 	std::unique_ptr<AppState> gameState(new LoadingState);
 	app.init(std::move(gameState));
 	app.run();
+//	testSpriteAnimation();
 	return 0;
 }

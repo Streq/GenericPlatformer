@@ -5,8 +5,7 @@
  *      Author: santiago
  */
 #include<Mocho/Lua/lua.hpp>
-#include<Mocho/Graphics/SpriteAnimation.hpp>
-#include<Mocho/Graphics/SpriteBatch.hpp>
+#include<Mocho/Graphics.hpp>
 namespace mch{
 const char* hola(int a, int b){
 	return "a+b";
@@ -32,22 +31,32 @@ void testSpriteAnimation(){
 	texture.loadFromFile("runningcat.png");
 	auto bounds = texture.getSize();
 	auto frameSize = Vec2u(bounds.x/2u,bounds.y/4u);
-	SpriteAnimation s0(&texture, frameSize);
-	s0.setFrameSpeed(sf::seconds(1.f),8);
-	s0.setAnimationType(SpriteAnimation::Type::Once);
-	s0.getSprite().setScale(0.5f,0.5f);
+	SpriteSheetBuilder ssb;
+	ssb.setSize(frameSize);
 
-	SpriteAnimation s1(&texture, frameSize);
-	s1.setFrameSpeed(sf::seconds(1.f),8);
-	s1.setAnimationType(SpriteAnimation::Type::Loop);
-	s1.getSprite().setPosition(Vec2f(0,frameSize.y*0.5f));
-	s1.getSprite().setScale(0.5f,0.5f);
+	SpriteGallery onceGallery;
+	onceGallery.setAnimationType(mch::SpriteGallery::Type::Once);
+	onceGallery.setSprites(ssb.makeSheet(texture));
 
-	SpriteAnimation s2(&texture, frameSize);
-	s2.setFrameSpeed(sf::seconds(1.f),8);
-	s2.setAnimationType(SpriteAnimation::Type::BackAndForth);
-	s2.getSprite().setPosition(Vec2f(0,frameSize.y));
-	s2.getSprite().setScale(0.5f,0.5f);
+	SpriteGallery loopGallery;
+	loopGallery.setAnimationType(mch::SpriteGallery::Type::Loop);
+	loopGallery.setSprites(ssb.makeSheet(texture));
+
+	SpriteGallery bafGallery;
+	bafGallery.setAnimationType(mch::SpriteGallery::Type::BackAndForth);
+	bafGallery.setSprites(ssb.makeSheet(texture));
+
+	SpriteAnimation a0;
+	a0.setSpriteGallery(onceGallery);
+	a0.setFrameTime(sf::seconds(1.f/8.f));
+
+	SpriteAnimation a1;
+	a1.setSpriteGallery(loopGallery);
+	a1.setFrameTime(sf::seconds(1.f/8.f));
+
+	SpriteAnimation a2;
+	a2.setSpriteGallery(bafGallery);
+	a2.setFrameTime(sf::seconds(1.f/8.f));
 
 	sf::RenderWindow win(sf::VideoMode(800,600),"prueba animacion sprite");
 	sf::Clock clock;
@@ -59,13 +68,23 @@ void testSpriteAnimation(){
 			}
 		}
 		auto dt = clock.restart();
-		s0.update(dt);
-		s1.update(dt);
-		s2.update(dt);
+		sf::Transform t0;
+		sf::Transform t1;
+		sf::Transform t2;
+		t0.scale(0.5f,0.5f);
+		t1.scale(0.5f,0.5f);
+		t2.scale(0.5f,0.5f);
+		t0.translate(0.f,0.f);
+		t1.translate(0.f,300.f);
+		t2.translate(0.f,600.f);
+
+		a0.update(dt);
+		a1.update(dt);
+		a2.update(dt);
 		win.clear();
-		win.draw(s0.getSprite());
-		win.draw(s1.getSprite());
-		win.draw(s2.getSprite());
+		win.draw(a0.getCurrentFrame(),t0);
+		win.draw(a1.getCurrentFrame(),t1);
+		win.draw(a2.getCurrentFrame(),t2);
 		win.display();
 	}
 
