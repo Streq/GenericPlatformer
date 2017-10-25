@@ -65,7 +65,6 @@ struct Player : public Entity{
 				case State::ground:{
 					if(m_actions[Action::jump]){
 						m_velocity.y -= m_jump_speed;
-						m_state=State::air;
 					}
 					if(m_actions[Action::moveLeft]){
 						m_velocity.x -= dt * m_walk_acc;

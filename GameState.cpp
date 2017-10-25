@@ -13,6 +13,8 @@
 
 #include <Mocho/Application/AppContext.hpp>
 #include <Mocho/Collision/collision.hpp>
+
+#include <algorithm>
 namespace mch {
 
 void GameState::draw
@@ -44,7 +46,16 @@ void GameState::draw
 
 
 void GameState::init() {
-	memset(m_input, false, input_key::size);
+	m_input_1[input_key::down]=sf::Keyboard::Down;
+	m_input_1[input_key::up]=sf::Keyboard::Up;
+	m_input_1[input_key::left]=sf::Keyboard::Left;
+	m_input_1[input_key::right]=sf::Keyboard::Right;
+
+	m_input_2[input_key::down]=sf::Keyboard::S;
+	m_input_2[input_key::up]=sf::Keyboard::W;
+	m_input_2[input_key::left]=sf::Keyboard::A;
+	m_input_2[input_key::right]=sf::Keyboard::D;
+
 	Entity block
 		{ Vec2f(0.f,0.f)//velocity
 		, Vec2f(0.f,0.f)//position
@@ -99,22 +110,21 @@ void GameState::init() {
 	m_characters.push_back(
 		mplayer
 	);
-	for(int i = 0; i < 1; ++i){
-		m_walls.push_back(wall_factory(0.f, 0.f));//250.f - 25.f * i));
-		m_walls.push_back(floor_factory(/*25.f * i*/0.f, 0.f));
-		m_walls.push_back(floor_factory(/*25.f * i*/0.f, 250.f));
-	}
+	mplayer.m_position = Vec2f(150.f,100.f);//position
+	m_characters.push_back(
+		mplayer
+	);
+	m_walls.push_back(wall_factory(0.f, 0.f));
+	m_walls.push_back(floor_factory(0.f, 0.f));
+	m_walls.push_back(floor_factory(0.f, 250.f));
+	m_walls.push_back(floor_factory(500.f, 250.f));
+	m_walls.push_back(floor_factory(1000.f, 200.f));
+	m_walls.push_back(floor_factory(1600.f, 230.f));
+
+
+
 	m_player_speed = 0.f;
 	m_player_acceleration = 1000.f;
-}
-
-Vec2f GameState::getInputDirection() {
-	return	vec::normalized
-	( Vec2f
-		( m_input[input_key::right] - m_input[input_key::left]
-		, m_input[input_key::down] - m_input[input_key::up]
-		)
-	);
 }
 
 
@@ -124,9 +134,25 @@ bool GameState::update() {
 	float dt = getContext().settings.microseconds_per_step*1e-6;
 	//input direction vector
 	//move entities
-	m_characters[0].m_actions[Player::Action::jump]=m_input[input_key::up];
-	m_characters[0].m_actions[Player::Action::moveLeft]=m_input[input_key::left];
-	m_characters[0].m_actions[Player::Action::moveRight]=m_input[input_key::right];
+	auto& keyboard = getContext().keyboard;
+
+	auto action1 = [this,&keyboard](Player::Action action, input_key key){
+		m_characters[0].m_actions[action]=
+				keyboard.checkPressed(m_input_1[key]);
+	};
+	auto action2 = [this,&keyboard](Player::Action action, input_key key){
+		m_characters[1].m_actions[action]=
+				keyboard.checkPressed(m_input_2[key]);
+	};
+
+	action1(Player::Action::jump,input_key::up);
+	action1(Player::Action::moveLeft,input_key::left);
+	action1(Player::Action::moveRight,input_key::right);
+
+	action2(Player::Action::jump,input_key::up);
+	action2(Player::Action::moveLeft,input_key::left);
+	action2(Player::Action::moveRight,input_key::right);
+
 
 	for(auto& e : m_walls){
 		e.Entity::update(dt);
@@ -134,6 +160,7 @@ bool GameState::update() {
 	for(auto& e : m_characters){
 		e.Player::update(dt);
 		e.Entity::update(dt);
+		e.m_state=Player::State::air;
 	}
 	auto& walls = m_walls;
 
@@ -199,48 +226,18 @@ bool GameState::update() {
 bool GameState::input(
 		const sf::Event& e) {
 	switch (e.type){
-		case sf::Event::KeyPressed:{
-			switch(e.key.code){
-				case sf::Keyboard::Key::A:{
-					m_input[input_key::left]=true;
-				}break;
-				case sf::Keyboard::Key::S:{
-					m_input[input_key::down]=true;
-				}break;
-				case sf::Keyboard::Key::D:{
-					m_input[input_key::right]=true;
-				}break;
-				case sf::Keyboard::Key::W:{
-					m_input[input_key::up]=true;
-				}break;
-			}
-		}break;
 		case sf::Event::KeyReleased:{
 			switch(e.key.code){
-				case sf::Keyboard::Key::A:{
-					m_input[input_key::left]=false;
-				}break;
-				case sf::Keyboard::Key::S:{
-					m_input[input_key::down]=false;
-				}break;
-				case sf::Keyboard::Key::D:{
-					m_input[input_key::right]=false;
-				}break;
-				case sf::Keyboard::Key::W:{
-					m_input[input_key::up]=false;
-				}break;
 				case sf::Keyboard::Key::R:{
 					m_characters[0].m_position=Vec2f(100.f,100.f);
 				}break;
 			}
 		}break;
-		case sf::Event::LostFocus:{
-			memset(m_input, false, input_key::size);
-		}break;
 		case sf::Event::Closed:{
 			requestClear();
 		}break;
 	}
+
 	return true;
 }
 

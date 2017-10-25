@@ -13,7 +13,9 @@
 #include <Mocho/vec2.hpp>
 #include <vector>
 
+#include <SFML/Window/Keyboard.hpp>
 #include "Entities/Entity.hpp"
+
 namespace mch {
 
 class GameState: public AppState {
@@ -34,6 +36,7 @@ class GameState: public AppState {
 
 		void init();
 	private:
+
 		float m_player_speed;
 		float m_player_acceleration;
 		std::vector<Entity> m_walls;
@@ -41,7 +44,9 @@ class GameState: public AppState {
 		enum input_key{
 			up,left,down,right,size
 		};
-		bool m_input[input_key::size];
+		using Controller = sf::Keyboard::Key [input_key::size];
+		Controller m_input_1;
+		Controller m_input_2;
 
 	private:
 		Vec2f getInputDirection();
